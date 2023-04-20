@@ -23,6 +23,11 @@ export default class GameEngine {
             this.serverAttackNation(event);
         });
 
+        document.addEventListener("contextmenu", (event) => {
+            event.preventDefault();
+            this.serverDonateNation(event);
+        });
+
         if (this.debugMode) {
             console.log("Debug mode is enabled");
         }
@@ -186,6 +191,28 @@ export default class GameEngine {
         }
     }
 
+    serverDonateNation(event) {
+        let x = event.clientX;
+        let y = event.clientY;
+        if (this.debugMode) {
+            console.log(`Clicked at (x:${x}, y:${y})`);
+        }
+        x = Math.round(x / 4) * 4;
+        y = Math.round(y / 4) * 4;
+        if (this.debugMode) {
+            console.log(`Rounded to (x:${x}, y:${y})`);
+        }
+        let moneyPercentage = this.moneyPercentage.value;
+        console.log(moneyPercentage);
+        let data = {
+            type: "donateNation",
+            id: this.player,
+            x: x,
+            y: y,
+            moneyPercentage: moneyPercentage
+        };
+        this.socket.send(JSON.stringify(data));
+    }
 
 
     connectToServer(server = "ws://localhost:4444") {
@@ -209,6 +236,8 @@ export default class GameEngine {
                 data.defenderBorderPixels = new Set(data.defenderBorderPixels);
                 data.attackerBorderPixels = new Set(data.attackerBorderPixels);
                 this.attackNation(data.attacker, data.defender, data.attackerPixelsOwned, data.defenderBorderPixels, data.attackerBorderPixels);
+            } else if (data.type === "donateNation") {
+                if (this.debugMode) { console.log("%s donated %s to %s", data.donator, data.amount, data.recipient); }
             }
         };
         this.socket.onerror = (error) => {
